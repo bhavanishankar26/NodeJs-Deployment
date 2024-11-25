@@ -1,63 +1,95 @@
-# Name of the GitHub Actions workflow
-name: CI/CD for Node.js REST-API
+# # Name of the GitHub Actions workflow
+# name: CI/CD for Node.js REST-API
 
-# Triggers for the workflow
+# # Triggers for the workflow
+# on:
+#   push:
+#     branches: [main] # Trigger workflow on push events to the main branch
+#   workflow_dispatch: # Allow manual trigger of the workflow
+
+# # Permissions required for this workflow
+# permissions:
+#   contents: write
+
+# # Define jobs
+# jobs:
+#   # Build job
+#   Build:
+#     # Use the latest Ubuntu runner for the job
+#     runs-on: ubuntu-latest
+
+#     # Steps to execute in the Build job
+#     steps:
+#       # Step 1: Checkout the repository
+#       - name: Checkout repository
+#         uses: actions/checkout@v3 # Fetches the repository's code
+
+#       # Step 2: Login to DockerHub
+#       - name: Login to DockerHub
+#         env:
+#           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} # DockerHub username from GitHub Secrets
+#           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # DockerHub password from GitHub Secrets
+#         run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+#       # Step 3: Build Docker image
+#       - name: Build Docker Image
+#         run: docker build -t bishal5438/rest-api .
+
+#       # Step 4: Push the Docker image to DockerHub
+#       - name: Push to DockerHub
+#         run: docker push bishal5438/rest-api:latest
+
+#   # Deploy job
+#   Deploy:
+#     # Use a self-hosted runner for deployment
+#     runs-on: self-hosted
+
+#     # Steps to execute in the Deploy job
+#     steps:
+#       # Step 1: Pull the latest Docker image
+#       - name: Pull the Docker Image
+#         run: docker pull bishal5438/rest-api:latest
+
+#       # Step 2: Delete the old container if it exists
+#       - name: Delete Old Container
+#         run: |
+#           if [ "$(docker ps -q -f name=rest-api-Container)" ]; then
+#             sudo docker rm -f rest-api-Container
+#           fi
+
+#       # Step 3: Run a new container with the latest Docker image
+#       - name: Run the Container
+#         run: docker run -d -p 80:80 --name rest-api-Container bishal5438/rest-api
+
+name: Build and Push Docker Image
+
 on:
   push:
-    branches: [main] # Trigger workflow on push events to the main branch
-  workflow_dispatch: # Allow manual trigger of the workflow
+    branches:
+      - main
 
-# Permissions required for this workflow
-permissions:
-  contents: write
-
-# Define jobs
 jobs:
-  # Build job
-  Build:
-    # Use the latest Ubuntu runner for the job
+  build:
     runs-on: ubuntu-latest
 
-    # Steps to execute in the Build job
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3 # Fetches the repository's code
+      # Step 1: Checkout Code
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      # Step 2: Login to DockerHub
-      - name: Login to DockerHub
+      # Step 2: Log in to Docker Hub
+      - name: Log in to Docker Hub
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} # DockerHub username from GitHub Secrets
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }} # DockerHub password from GitHub Secrets
-        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # Step 3: Build Docker image
+      # Step 3: Build Docker Image
       - name: Build Docker Image
-        run: docker build -t bishal5438/rest-api .
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/my-image:latest .
 
-      # Step 4: Push the Docker image to DockerHub
-      - name: Push to DockerHub
-        run: docker push bishal5438/rest-api:latest
+      # Step 4: Push Docker Image
+      - name: Push Docker Image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/my-image:latest
 
-  # Deploy job
-  Deploy:
-    # Use a self-hosted runner for deployment
-    runs-on: self-hosted
-
-    # Steps to execute in the Deploy job
-    steps:
-      # Step 1: Pull the latest Docker image
-      - name: Pull the Docker Image
-        run: docker pull bishal5438/rest-api:latest
-
-      # Step 2: Delete the old container if it exists
-      - name: Delete Old Container
-        run: |
-          if [ "$(docker ps -q -f name=rest-api-Container)" ]; then
-            sudo docker rm -f rest-api-Container
-          fi
-
-      # Step 3: Run a new container with the latest Docker image
-      - name: Run the Container
-        run: docker run -d -p 80:80 --name rest-api-Container bishal5438/rest-api
 
